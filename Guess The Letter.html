@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Letter Sound Money Game</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 10px;
+            color: #333;
+        }
+        
+        .game-container {
+            max-width: 400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(45deg, #ff6b6b, #feca57);
+            padding: 20px;
+            text-align: center;
+            color: white;
+        }
+        
+        .title {
+            font-size: 24px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 16px;
+        }
+        
+        .voice-button {
+            background: #4ecdc4;
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            font-size: 24px;
+            color: white;
+            cursor: pointer;
+            margin: 15px auto;
+            display: block;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .voice-button:hover {
+            transform: scale(1.1);
+            background: #45b7aa;
+        }
+        
+        .game-area {
+            padding: 20px;
+        }
+        
+        .word-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .word-image {
+            font-size: 80px;
+            margin-bottom: 15px;
+        }
+        
+        .instruction {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+        
+        .letter-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        
+        .letter-button {
+            background: linear-gradient(45deg, #74b9ff, #0984e3);
+            border: none;
+            border-radius: 15px;
+            padding: 20px;
+            font-size: 20px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            min-height: 60px;
+        }
+        
+        .letter-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+        
+        .letter-button.correct {
+            background: linear-gradient(45deg, #00b894, #00a085);
+            animation: bounce 0.6s ease;
+        }
+        
+        .letter-button.wrong {
+            background: linear-gradient(45deg, #e17055, #d63031);
+            animation: shake 0.6s ease;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 60%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            80% { transform: translateY(-5px); }
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        
+        .feedback {
+            text-align: center;
+            font-size: 18px;
+            font-weight: bold;
+            margin: 20px 0;
+            min-height: 25px;
+        }
+        
+        .money-earned {
+            background: linear-gradient(45deg, #fdcb6e, #e17055);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .level-up {
+            background: linear-gradient(45deg, #a29bfe, #6c5ce7);
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            font-size: 22px;
+            font-weight: bold;
+            margin: 20px 0;
+            display: none;
+            animation: pulse 1s ease-in-out;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .next-button {
+            background: linear-gradient(45deg, #00b894, #00a085);
+            border: none;
+            border-radius: 15px;
+            padding: 15px 30px;
+            font-size: 18px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            width: 100%;
+            margin-top: 20px;
+            display: none;
+            transition: all 0.3s ease;
+        }
+        
+        .next-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <div class="title">🎯 Letter Sound Game</div>
+            <div class="stats">
+                <span>💰 $<span id="totalMoney">0</span></span>
+                <span>📊 Level <span id="level">1</span></span>
+                <span>🎯 <span id="score">0</span>/5</span>
+            </div>
+        </div>
+        
+        <button class="voice-button" id="voiceButton" title="Listen to directions">🔊</button>
+        
+        <div class="game-area">
+            <div class="word-display">
+                <div class="word-image" id="wordImage">🐱</div>
+                <div class="instruction">What sound does this word start with?</div>
+            </div>
+            
+            <div class="letter-grid" id="letterGrid">
+                <button class="letter-button">a</button>
+                <button class="letter-button">b</button>
+                <button class="letter-button">c</button>
+                <button class="letter-button">d</button>
+            </div>
+            
+            <div class="feedback" id="feedback"></div>
+            <div class="money-earned" id="moneyEarned"></div>
+            <div class="level-up" id="levelUp"></div>
+            <button class="next-button" id="nextButton">Next Word →</button>
+        </div>
+    </div>
+
+    <script>
+        class LetterSoundGame {
+            constructor() {
+                this.words = [
+                    // Single letter sounds
+                    {emoji: '🐱', word: 'cat', letter: 'c'},
+                    {emoji: '🐕', word: 'dog', letter: 'd'},
+                    {emoji: '🐘', word: 'elephant', letter: 'e'},
+                    {emoji: '🐸', word: 'frog', letter: 'f'},
+                    {emoji: '🐐', word: 'goat', letter: 'g'},
+                    {emoji: '🏠', word: 'house', letter: 'h'},
+                    {emoji: '🍦', word: 'ice cream', letter: 'i'},
+                    {emoji: '🦘', word: 'kangaroo', letter: 'k'},
+                    {emoji: '🦁', word: 'lion', letter: 'l'},
+                    {emoji: '🐭', word: 'mouse', letter: 'm'},
+                    {emoji: '🥜', word: 'nut', letter: 'n'},
+                    {emoji: '🐙', word: 'octopus', letter: 'o'},
+                    {emoji: '🐧', word: 'penguin', letter: 'p'},
+                    {emoji: '👑', word: 'queen', letter: 'q'},
+                    {emoji: '🌈', word: 'rainbow', letter: 'r'},
+                    {emoji: '⭐', word: 'star', letter: 's'},
+                    {emoji: '🐅', word: 'tiger', letter: 't'},
+                    {emoji: '☂️', word: 'umbrella', letter: 'u'},
+                    {emoji: '🌋', word: 'volcano', letter: 'v'},
+                    {emoji: '🐋', word: 'whale', letter: 'w'},
+                    {emoji: '🧶', word: 'yarn', letter: 'y'},
+                    {emoji: '🦓', word: 'zebra', letter: 'z'},
+                    {emoji: '🍎', word: 'apple', letter: 'a'},
+                    {emoji: '🎈', word: 'balloon', letter: 'b'},
+                    {emoji: '🚗', word: 'car', letter: 'c'},
+                    {emoji: '🦆', word: 'duck', letter: 'd'},
+                    {emoji: '🥚', word: 'egg', letter: 'e'},
+                    {emoji: '🔥', word: 'fire', letter: 'f'},
+                    {emoji: '🎁', word: 'gift', letter: 'g'},
+                    {emoji: '🎩', word: 'hat', letter: 'h'},
+                    {emoji: '🧊', word: 'ice', letter: 'i'},
+                    {emoji: '🃏', word: 'joker', letter: 'j'},
+                    {emoji: '🔑', word: 'key', letter: 'k'},
+                    {emoji: '🍋', word: 'lemon', letter: 'l'},
+                    {emoji: '🌙', word: 'moon', letter: 'm'},
+                    {emoji: '🪺', word: 'nest', letter: 'n'},
+                    {emoji: '🍊', word: 'orange', letter: 'o'},
+                    {emoji: '🍕', word: 'pizza', letter: 'p'},
+                    {emoji: '❓', word: 'question', letter: 'q'},
+                    {emoji: '🌹', word: 'rose', letter: 'r'},
+                    {emoji: '☀️', word: 'sun', letter: 's'},
+                    {emoji: '🌳', word: 'tree', letter: 't'},
+                    {emoji: '🦄', word: 'unicorn', letter: 'u'},
+                    {emoji: '🎻', word: 'violin', letter: 'v'},
+                    {emoji: '💧', word: 'water', letter: 'w'},
+                    {emoji: '❌', word: 'x-ray', letter: 'x'},
+                    {emoji: '💛', word: 'yellow', letter: 'y'},
+                    {emoji: '⚡', word: 'zap', letter: 'z'},
+                    
+                    // Digraphs
+                    {emoji: '🧀', word: 'cheese', letter: 'ch'},
+                    {emoji: '🍒', word: 'cherry', letter: 'ch'},
+                    {emoji: '🪑', word: 'chair', letter: 'ch'},
+                    {emoji: '⛪', word: 'church', letter: 'ch'},
+                    {emoji: '🐥', word: 'chick', letter: 'ch'},
+                    {emoji: '🍫', word: 'chocolate', letter: 'ch'},
+                    
+                    {emoji: '👍', word: 'thumb', letter: 'th'},
+                    {emoji: '🤔', word: 'think', letter: 'th'},
+                    {emoji: '🦷', word: 'tooth', letter: 'th'},
+                    {emoji: '🧵', word: 'thread', letter: 'th'},
+                    {emoji: '👑', word: 'throne', letter: 'th'},
+                    
+                    {emoji: '🐑', word: 'sheep', letter: 'sh'},
+                    {emoji: '🦈', word: 'shark', letter: 'sh'},
+                    {emoji: '👕', word: 'shirt', letter: 'sh'},
+                    {emoji: '🛡️', word: 'shield', letter: 'sh'},
+                    {emoji: '🚿', word: 'shower', letter: 'sh'},
+                    {emoji: '👞', word: 'shoe', letter: 'sh'},
+                    
+                    {emoji: '🐋', word: 'whale', letter: 'wh'},
+                    {emoji: '🎡', word: 'wheel', letter: 'wh'},
+                    {emoji: '🥛', word: 'white', letter: 'wh'},
+                    {emoji: '❓', word: 'what', letter: 'wh'},
+                    {emoji: '📍', word: 'where', letter: 'wh'},
+                    {emoji: '🌪️', word: 'whirl', letter: 'wh'}
+                ];
+                
+                this.currentWordIndex = 0;
+                this.level = 1;
+                this.score = 0;
+                this.totalMoney = 0;
+                this.wordsInLevel = 0;
+                this.gameActive = true;
+                
+                this.shuffleWords();
+                this.initializeGame();
+                this.setupEventListeners();
+            }
+            
+            shuffleWords() {
+                for (let i = this.words.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [this.words[i], this.words[j]] = [this.words[j], this.words[i]];
+                }
+            }
+            
+            initializeGame() {
+                this.displayCurrentWord();
+                this.generateLetterOptions();
+                this.updateStats();
+            }
+            
+            displayCurrentWord() {
+                const currentWord = this.words[this.currentWordIndex];
+                document.getElementById('wordImage').textContent = currentWord.emoji;
+            }
+            
+            generateLetterOptions() {
+                const currentWord = this.words[this.currentWordIndex];
+                const correctLetter = currentWord.letter.toLowerCase();
+                
+                // Create pool of options based on whether it's a digraph or single letter
+                let allOptions = [];
+                
+                if (correctLetter.length > 1) {
+                    // For digraphs, include other digraphs and some single letters
+                    const digraphs = ['ch', 'th', 'sh', 'wh'];
+                    const singleLetters = ['b', 'c', 'd', 'f', 'g', 'h', 'j', 'k', 'l', 'm', 'n', 'p', 'r', 's', 't', 'v', 'w', 'z'];
+                    
+                    // Get wrong digraphs
+                    const wrongDigraphs = digraphs.filter(d => d !== correctLetter);
+                    
+                    // Select 2 wrong digraphs and 1 single letter
+                    const selectedWrong = [];
+                    selectedWrong.push(...wrongDigraphs.slice(0, 2));
+                    selectedWrong.push(singleLetters[Math.floor(Math.random() * singleLetters.length)]);
+                    
+                    allOptions = [...selectedWrong, correctLetter];
+                } else {
+                    // For single letters, use single letters only
+                    const letters = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k', 'l', 'm', 'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'];
+                    const wrongLetters = letters.filter(l => l !== correctLetter);
+                    
+                    // Get 3 random wrong letters
+                    const selectedWrong = [];
+                    while (selectedWrong.length < 3) {
+                        const randomLetter = wrongLetters[Math.floor(Math.random() * wrongLetters.length)];
+                        if (!selectedWrong.includes(randomLetter)) {
+                            selectedWrong.push(randomLetter);
+                        }
+                    }
+                    
+                    allOptions = [...selectedWrong, correctLetter];
+                }
+                
+                // Shuffle options
+                for (let i = allOptions.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [allOptions[i], allOptions[j]] = [allOptions[j], allOptions[i]];
+                }
+                
+                // Display letters
+                const letterGrid = document.getElementById('letterGrid');
+                letterGrid.innerHTML = '';
+                allOptions.forEach(letter => {
+                    const button = document.createElement('button');
+                    button.className = 'letter-button';
+                    button.textContent = letter;
+                    button.addEventListener('click', () => this.checkAnswer(letter));
+                    letterGrid.appendChild(button);
+                });
+            }
+            
+            checkAnswer(selectedLetter) {
+                if (!this.gameActive) return;
+                
+                const currentWord = this.words[this.currentWordIndex];
+                const correctLetter = currentWord.letter;
+                const buttons = document.querySelectorAll('.letter-button');
+                
+                this.gameActive = false;
+                
+                buttons.forEach(button => {
+                    if (button.textContent === selectedLetter) {
+                        if (selectedLetter === correctLetter) {
+                            button.classList.add('correct');
+                            this.playSuccessSound();
+                            this.handleCorrectAnswer();
+                        } else {
+                            button.classList.add('wrong');
+                            this.handleWrongAnswer();
+                        }
+                    }
+                    button.style.pointerEvents = 'none';
+                });
+                
+                setTimeout(() => {
+                    document.getElementById('nextButton').style.display = 'block';
+                }, 1500);
+            }
+            
+            handleCorrectAnswer() {
+                const dollarsEarned = this.level * 10;
+                this.totalMoney += dollarsEarned;
+                this.score++;
+                this.wordsInLevel++;
+                
+                document.getElementById('feedback').textContent = '🎉 Correct!';
+                document.getElementById('feedback').style.color = '#00b894';
+                
+                const moneyDiv = document.getElementById('moneyEarned');
+                moneyDiv.textContent = `💰 You earned $${dollarsEarned}!`;
+                moneyDiv.style.display = 'block';
+                
+                // Check for level up
+                if (this.wordsInLevel >= 5) {
+                    this.levelUp();
+                }
+                
+                this.updateStats();
+                this.speakEncouragement(dollarsEarned);
+            }
+            
+            handleWrongAnswer() {
+                const currentWord = this.words[this.currentWordIndex];
+                document.getElementById('feedback').textContent = `❌ Try again! ${currentWord.word} starts with "${currentWord.letter}"`;
+                document.getElementById('feedback').style.color = '#d63031';
+            }
+            
+            levelUp() {
+                this.level++;
+                this.wordsInLevel = 0;
+                this.score = 0;
+                
+                const levelUpDiv = document.getElementById('levelUp');
+                levelUpDiv.textContent = `🎊 Level Up! Now Level ${this.level}! Earn $${this.level * 10} per word!`;
+                levelUpDiv.style.display = 'block';
+            }
+            
+            nextWord() {
+                // Reset UI
+                document.getElementById('feedback').textContent = '';
+                document.getElementById('moneyEarned').style.display = 'none';
+                document.getElementById('levelUp').style.display = 'none';
+                document.getElementById('nextButton').style.display = 'none';
+                
+                // Move to next word
+                this.currentWordIndex = (this.currentWordIndex + 1) % this.words.length;
+                if (this.currentWordIndex === 0) {
+                    this.shuffleWords();
+                }
+                
+                this.gameActive = true;
+                this.displayCurrentWord();
+                this.generateLetterOptions();
+                
+                // Reset button styles
+                const buttons = document.querySelectorAll('.letter-button');
+                buttons.forEach(button => {
+                    button.classList.remove('correct', 'wrong');
+                    button.style.pointerEvents = 'auto';
+                });
+            }
+            
+            updateStats() {
+                document.getElementById('totalMoney').textContent = this.totalMoney;
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('score').textContent = this.score;
+            }
+            
+            getLetterSound(letter) {
+                const letterSounds = {
+                    'a': 'ah',
+                    'b': 'buh',
+                    'c': 'kuh',
+                    'd': 'duh',
+                    'e': 'eh',
+                    'f': 'fuh',
+                    'g': 'guh',
+                    'h': 'huh',
+                    'i': 'ih',
+                    'j': 'juh',
+                    'k': 'kuh',
+                    'l': 'luh',
+                    'm': 'muh',
+                    'n': 'nuh',
+                    'o': 'oh',
+                    'p': 'puh',
+                    'q': 'kwuh',
+                    'r': 'ruh',
+                    's': 'sss',
+                    't': 'tuh',
+                    'u': 'uh',
+                    'v': 'vuh',
+                    'w': 'wuh',
+                    'x': 'ks',
+                    'y': 'yuh',
+                    'z': 'zzz',
+                    'ch': 'chuh',
+                    'th': 'thuh',
+                    'sh': 'shuh',
+                    'wh': 'whuh'
+                };
+                return letterSounds[letter.toLowerCase()] || letter;
+            }
+            
+            speakDirections() {
+                if ('speechSynthesis' in window) {
+                    speechSynthesis.cancel();
+                    
+                    const currentWord = this.words[this.currentWordIndex];
+                    const letterSound = this.getLetterSound(currentWord.letter);
+                    const text = `The word is ${currentWord.word}. Click the letter that makes the ${letterSound} sound.`;
+                    
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 0.7;
+                    utterance.pitch = 1.3;
+                    
+                    const speakWithVoice = () => {
+                        const voices = speechSynthesis.getVoices();
+                        const femaleVoice = voices.find(voice => 
+                            voice.name.toLowerCase().includes('female') || 
+                            voice.name.toLowerCase().includes('woman') ||
+                            voice.name.toLowerCase().includes('samantha') ||
+                            voice.name.toLowerCase().includes('karen') ||
+                            voice.name.toLowerCase().includes('susan') ||
+                            voice.name.toLowerCase().includes('victoria') ||
+                            voice.name.toLowerCase().includes('zira') ||
+                            (voice.name.toLowerCase().includes('google') && voice.name.toLowerCase().includes('female'))
+                        );
+                        
+                        if (femaleVoice) {
+                            utterance.voice = femaleVoice;
+                        }
+                        
+                        speechSynthesis.speak(utterance);
+                    };
+                    
+                    if (speechSynthesis.getVoices().length > 0) {
+                        speakWithVoice();
+                    } else {
+                        speechSynthesis.addEventListener('voiceschanged', speakWithVoice, { once: true });
+                        setTimeout(speakWithVoice, 100);
+                    }
+                } else {
+                    alert('Sorry, voice feature is not supported on this device.');
+                }
+            }
+            
+            playSuccessSound() {
+                if ('AudioContext' in window || 'webkitAudioContext' in window) {
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                    
+                    const frequencies = [523.25, 659.25, 783.99];
+                    frequencies.forEach((freq, index) => {
+                        const oscillator = audioContext.createOscillator();
+                        const gainNode = audioContext.createGain();
+                        
+                        oscillator.connect(gainNode);
+                        gainNode.connect(audioContext.destination);
+                        
+                        oscillator.frequency.setValueAtTime(freq, audioContext.currentTime);
+                        oscillator.type = 'sine';
+                        
+                        gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+                        gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.01 + index * 0.1);
+                        gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2 + index * 0.1);
+                        
+                        oscillator.start(audioContext.currentTime + index * 0.1);
+                        oscillator.stop(audioContext.currentTime + 0.3 + index * 0.1);
+                    });
+                }
+            }
+            
+            speakEncouragement(dollarsEarned) {
+                if ('speechSynthesis' in window) {
+                    const encouragements = [
+                        'Great job!', 'Awesome!', 'Fantastic!', 'Well done!', 
+                        'Super!', 'Excellent!', 'Amazing!', 'Perfect!'
+                    ];
+                    const randomEncouragement = encouragements[Math.floor(Math.random() * encouragements.length)];
+                    
+                    const text = `${randomEncouragement} You earned ${dollarsEarned} dollars! You now have ${this.totalMoney} dollars total. Click the green button to continue!`;
+                    
+                    const utterance = new SpeechSynthesisUtterance(text);
+                    utterance.rate = 0.8;
+                    utterance.pitch = 1.3;
+                    
+                    const speakEncouragement = () => {
+                        const voices = speechSynthesis.getVoices();
+                        const femaleVoice = voices.find(voice => 
+                            voice.name.toLowerCase().includes('female') || 
+                            voice.name.toLowerCase().includes('woman') ||
+                            voice.name.toLowerCase().includes('samantha') ||
+                            voice.name.toLowerCase().includes('karen') ||
+                            voice.name.toLowerCase().includes('susan') ||
+                            voice.name.toLowerCase().includes('victoria') ||
+                            voice.name.toLowerCase().includes('zira') ||
+                            (voice.name.toLowerCase().includes('google') && voice.name.toLowerCase().includes('female'))
+                        );
+                        
+                        if (femaleVoice) {
+                            utterance.voice = femaleVoice;
+                        }
+                        
+                        speechSynthesis.speak(utterance);
+                    };
+                    
+                    setTimeout(() => {
+                        if (speechSynthesis.getVoices().length > 0) {
+                            speakEncouragement();
+                        } else {
+                            speechSynthesis.addEventListener('voiceschanged', speakEncouragement, { once: true });
+                            setTimeout(speakEncouragement, 100);
+                        }
+                    }, 800);
+                }
+            }
+            
+            setupEventListeners() {
+                document.getElementById('voiceButton').addEventListener('click', () => {
+                    this.speakDirections();
+                });
+                
+                document.getElementById('nextButton').addEventListener('click', () => {
+                    this.nextWord();
+                });
+            }
+        }
+        
+        window.addEventListener('load', () => {
+            new LetterSoundGame();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9823395db64a7e44',t:'MTc1ODM5MTI0NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
